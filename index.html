@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#192543" />
+  <meta name="description" content="A calm, map-first workspace for discovering trails and planning hikes." />
+  <title>Trailbook — Find your next trail</title>
+
+  <link href="vendor/maplibre.css" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="alpine.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Trailbook world map"><span class="brand-mark" aria-hidden="true">↗</span>Trailbook</a>
+    <button class="journal-link" id="openPlanner">My trips <span aria-hidden="true">↗</span></button>
+  </header>
+  <main class="app-shell">
+    <aside class="discover-panel">
+      <div class="intro-block">
+        <h1>Trail atlas</h1>
+        <div class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="Search a place or trail" aria-label="Search trails"/><kbd>⌘ K</kbd></div>
+      </div>
+      <div class="filter-row" aria-label="Route filters">
+        <select id="regionFilter" aria-label="Filter by region"><option value="all">Everywhere</option><option>Asia</option><option>Europe</option><option>Americas</option><option>Africa</option></select>
+        <select id="levelFilter" aria-label="Filter by difficulty"><option value="all">Any level</option><option>Easy</option><option>Moderate</option><option>Challenging</option></select>
+        <select id="seasonFilter" aria-label="Filter by season"><option value="all">Any season</option><option>Spring</option><option>Summer</option><option>Autumn</option><option>Year-round</option></select>
+      </div>
+      <div class="list-heading"><div><h2 id="routeCount">Routes to remember</h2></div><button class="sort-button" id="sortButton">Recommended <span>⌄</span></button></div>
+      <div class="route-list" id="routeList" aria-live="polite"></div>
+      <div class="panel-foot"><span class="tiny-dot"></span> Your plans stay on this device</div>
+    </aside>
+
+    <section class="map-stage" aria-label="Interactive hiking map">
+      <div class="map-label"><span class="map-label-icon">⌖</span><span><b id="mapTitle">Explore the world</b><small id="mapSubtitle">Select a route to see its waypoints</small></span></div>
+      <div id="map"></div>
+      <div class="map-overlay" id="mapOverlay"><div class="map-grid"></div><div class="overlay-world" id="mapStatus">Opening world map…</div><span class="map-orbit orbit-one"></span><span class="map-orbit orbit-two"></span></div>
+      <div class="map-controls"><button id="zoomIn" aria-label="Zoom in">+</button><button id="zoomOut" aria-label="Zoom out">−</button><button id="resetMap" title="Show the world" aria-label="Show the world">⌖</button></div>
+      <div class="map-legend"><span class="legend-pin"></span> Route stops <span class="legend-divider"></span><span class="legend-line"></span> Track / estimate</div>
+      
+      <div class="map-warning" id="geometryNotice"><span>ⓘ</span> Stops show places, not a verified trail line.</div>
+      <div class="map-actions" hidden><button class="map-action" id="importGpx"><span>＋</span> Import GPX</button><button class="map-action map-action-dark" id="addToWishlist"><span>♡</span> Add to wishlist</button><input id="gpxInput" type="file" accept=".gpx,application/gpx+xml,application/xml,text/xml" hidden /></div>
+      <div class="route-detail" id="routeDetail" aria-live="polite"></div>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+  <dialog id="plannerDialog" class="planner-dialog">
+    <div class="planner-header"><div><span class="eyebrow">YOUR TRAIL JOURNAL</span><h2 id="plannerTitle">My hiking plans</h2></div><button class="icon-button close-dialog" aria-label="Close">×</button></div>
+    <div class="planner-tabs"><button class="tab active" data-tab="wishlist">Wishlist <span id="wishlistCount">0</span></button><button class="tab" data-tab="planned">Planned <span id="plannedCount">0</span></button></div>
+    <div class="planner-body" id="plannerBody"></div>
+  </dialog>
+  <dialog id="tripDialog" class="trip-dialog">
+    <div class="planner-header"><div><span class="eyebrow">MAKE IT YOURS</span><h2 id="tripTitle">Plan this hike</h2></div><button class="icon-button close-dialog" aria-label="Close">×</button></div>
+    <form id="tripForm">
+      <div class="trip-form-grid"><label>Start date<input type="date" id="tripStart" /></label><label>End date<input type="date" id="tripEnd" /></label><label>Budget <span class="currency-input"><span>$</span><input type="number" id="tripBudget" min="0" placeholder="0" /></span></label><label>Trip status<select id="tripStatus"><option>Planning</option><option>Booked</option><option>Completed</option></select></label></div>
+      <label>Notes for this trip<textarea id="tripNotes" rows="2" placeholder="Travel days, people, reservations…"></textarea></label>
+      <div class="editor-section"><div class="editor-title"><div><span class="eyebrow">DAY BY DAY</span><h3>Itinerary</h3></div><button type="button" class="text-button" id="addDay">＋ Add a day</button></div><div id="itineraryEditor" class="itinerary-editor"></div></div>
+      <div class="editor-columns"><div class="editor-section"><div class="editor-title"><div><span class="eyebrow">PACK WITH CARE</span><h3>Gear list</h3></div></div><div id="gearEditor" class="gear-editor"></div><div class="inline-add"><input id="newGear" placeholder="Add an item"/><button type="button" id="addGear">＋</button></div></div><div class="editor-section"><div class="editor-title"><div><span class="eyebrow">LOOK OUT FOR EACH OTHER</span><h3>Safety notes</h3></div></div><textarea id="safetyNotes" rows="6" placeholder="Acclimatization, weather, permits, emergency plan…"></textarea></div></div>
+      <div class="trip-form-actions"><button type="button" class="button-quiet" id="removeFromPlan">Remove trip</button><button class="button-primary" type="submit">Save trip</button></div>
+    </form>
+  </dialog>
+  <dialog id="routingDialog" class="small-dialog"><form method="dialog"><button class="icon-button close-dialog" aria-label="Close">×</button><span class="eyebrow">OPTIONAL ROUTE ESTIMATE</span><h2>Connect OpenRouteService</h2><p>Enter your own free API key to ask ORS for a hiking route between this route’s waypoints. Coverage varies, and estimates need local verification before you hike.</p><label>API key<input id="orsKey" type="password" autocomplete="off" placeholder="Paste your ORS key"/></label><div class="dialog-actions"><a href="https://openrouteservice.org/dev/#/signup" target="_blank" rel="noreferrer">Get a free key ↗</a><button class="button-primary" id="calculateRoute" value="default">Estimate route</button></div><p class="fine-print">The key is stored only in this browser. The request goes to OpenRouteService.</p></form></dialog>
+  <script src="vendor/maplibre.js"></script>
+  <script src="vendor/land.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
